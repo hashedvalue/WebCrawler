@@ -14,7 +14,6 @@ public class XMLSummaryGenerator implements SummaryGenerator {
         this.filename = filename;
     }
 
-    @Override
     public void writeSummaryToFile() {
         try(
                 FileWriter fw = new FileWriter(filename);
