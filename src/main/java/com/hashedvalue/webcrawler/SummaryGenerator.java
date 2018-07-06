@@ -1,5 +1,5 @@
 package com.hashedvalue.webcrawler;
 
-public interface SummaryGenerator {
+interface SummaryGenerator {
     void writeSummaryToFile();
 }

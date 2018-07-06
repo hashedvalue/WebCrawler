@@ -6,17 +6,19 @@ import java.util.regex.Pattern;
 
 class ProcessedPage{
     private String currentUrl;
-    private String startUrl;
+    private String startHost;
     private HashSet<String> internalUrls;
     private HashSet<String> externalUrls;
-    private HashSet<String> staticUrls;
+    private HashSet<String> internalStaticUrls;
+    private HashSet<String> externalStaticUrls;
 
-    ProcessedPage(String startUrl, String currentUrl) {
+    ProcessedPage(String startHost, String currentUrl) {
         this.currentUrl = currentUrl;
-        this.startUrl = startUrl;
+        this.startHost = startHost;
         this.internalUrls = new HashSet<>();
         this.externalUrls = new HashSet<>();
-        this.staticUrls = new HashSet<>();
+        this.internalStaticUrls = new HashSet<>();
+        this.externalStaticUrls = new HashSet<>();
     }
 
     HashSet<String> getInternalUrls() {
@@ -27,8 +29,12 @@ class ProcessedPage{
         return externalUrls;
     }
 
-    HashSet<String> getStaticUrls() {
-        return staticUrls;
+    HashSet<String> getInternalStaticUrls() {
+        return internalStaticUrls;
+    }
+
+    HashSet<String> getExternalStaticUrls() {
+        return externalStaticUrls;
     }
 
     private void addInternalUrl(String url) {
@@ -39,44 +45,62 @@ class ProcessedPage{
         externalUrls.add(url);
     }
 
-    private void addStaticUrl(String url) {
-        staticUrls.add(url);
+    private void addInternalStaticUrl(String url) {
+        internalStaticUrls.add(url);
     }
 
-    void addUrl(String url) {
-        String hostRegex = "^https?://([-a-zA-Z0-9.]+)[-a-zA-Z0-9.&/=_?:#]*$";
-        String host;
-        boolean isStatic = false;
-        String staticExtRegex = "^.*[.](bmp|class|css|csv|doc|docx|ejs|eot|eps|gif|ico|jar|jpeg|jpg|js|mid|midi|otf|pdf|pict|pls|png|ppt|pptx|ps|svg|svgz|swf|tif|tiff|ttf|txt|webp|woff|woff2|xls|xlsx)$";
-        String startHost = null;
+    private void addExternalStaticUrl(String url) {
+        externalStaticUrls.add(url);
+    }
 
+    void addUrl(String linkUrl) {
+        boolean isStatic = false;
+
+        String hostRegex = "^https?://([-a-zA-Z0-9.]+)[-a-zA-Z0-9.&/=_?:#]*$";
         Pattern hostPattern = Pattern.compile(hostRegex);
 
-        Matcher startUrlMatcher = hostPattern.matcher(startUrl);
-        if (startUrlMatcher.find()) {
-            startHost = startUrlMatcher.group(1);
-        }
-
+        String staticExtRegex = "^.*[.](bmp|class|css|csv|doc|docx|ejs|eot|eps|gif|ico|jar|jpeg|jpg|js|json|mid|midi|otf|pdf|pict|pls|png|ppt|pptx|ps|svg|svgz|swf|tif|tiff|ttf|txt|webp|woff|woff2|xls|xlsx)(\\?.*)?$";
         Pattern staticExtPattern = Pattern.compile(staticExtRegex);
-        Matcher staticExtMatcher = staticExtPattern.matcher(url);
+
+        Matcher staticExtMatcher = staticExtPattern.matcher(linkUrl);
         if (staticExtMatcher.matches()) {
             isStatic = true;
         }
 
-        Matcher urlMatcher = hostPattern.matcher(url);
-        if (urlMatcher.find()) {
-            host = urlMatcher.group(1);
+        Matcher linkUrlMatcher = hostPattern.matcher(linkUrl);
+        if (linkUrlMatcher.find()) {
+            String host = linkUrlMatcher.group(1);
             if (startHost.equals(host) || host.endsWith(startHost)) {
                 if (isStatic) {
-                    addStaticUrl(url);
+                    if(internalStaticUrls.contains(linkUrl)) {
+                        System.out.println("Url already in internal static urls: " + linkUrl);
+                    } else {
+                        addInternalStaticUrl(linkUrl);
+                        System.out.println("Url added to internal static urls: " + linkUrl);
+                    }
                 } else {
-                    addInternalUrl(url);
+                    if (internalUrls.contains(linkUrl)) {
+                        System.out.println("Url already in internal urls: " + linkUrl);
+                    } else {
+                        addInternalUrl(linkUrl);
+                        System.out.println("Url added to internal urls: " + linkUrl);
+                    }
                 }
             } else {
                 if (isStatic) {
-                    addStaticUrl(url);
+                    if (externalStaticUrls.contains(linkUrl)) {
+                        System.out.println("Url already in external static urls: " + linkUrl);
+                    } else {
+                        addExternalStaticUrl(linkUrl);
+                        System.out.println("Url added to external static urls: " + linkUrl);
+                    }
                 } else {
-                    addExternalUrl(url);
+                    if (externalUrls.contains(linkUrl)) {
+                        System.out.println("Url already in external urls: " + linkUrl);
+                    } else {
+                        addExternalUrl(linkUrl);
+                        System.out.println("Url added to external urls: " + linkUrl);
+                    }
                 }
             }
         }
@@ -86,29 +110,37 @@ class ProcessedPage{
         StringBuilder builder = new StringBuilder();
 
         builder.append("<page>\n");
-        builder.append("\t<url>" + currentUrl + "</url>\n");
+        builder.append("\t<url>").append(currentUrl).append("</url>\n");
 
         if(internalUrls != null && internalUrls.size() > 0) {
             builder.append("\t<internalurls>\n");
             for (String internalUrl : internalUrls) {
-                builder.append("\t\t<internalurl>" + internalUrl + "</internalurl>\n");
+                builder.append("\t\t<internalurl>").append(internalUrl).append("</internalurl>\n");
             }
             builder.append("\t</internalurls>\n");
         }
         if(externalUrls != null && externalUrls.size() > 0) {
             builder.append("\t<externalurls>\n");
             for (String externalUrl : externalUrls) {
-                builder.append("\t\t<externalurl>" + externalUrl + "</externalurl>\n");
+                builder.append("\t\t<externalurl>").append(externalUrl).append("</externalurl>\n");
             }
             builder.append("\t</externalurls>\n");
         }
 
-        if(staticUrls != null && staticUrls.size() > 0) {
-            builder.append("\t<staticurls>\n");
-            for (String staticUrl : staticUrls) {
-                builder.append("\t\t<staticurl>" + staticUrl + "</staticurl>\n");
+        if(internalStaticUrls != null && internalStaticUrls.size() > 0) {
+            builder.append("\t<internalstaticurls>\n");
+            for (String staticUrl : internalStaticUrls) {
+                builder.append("\t\t<internalstaticurl>").append(staticUrl).append("</internalstaticurl>\n");
             }
-            builder.append("\t</staticurls>\n");
+            builder.append("\t</internalstaticurls>\n");
+        }
+
+        if(externalStaticUrls != null && externalStaticUrls.size() > 0) {
+            builder.append("\t<externalstaticurls>\n");
+            for (String staticUrl : externalStaticUrls) {
+                builder.append("\t\t<externalstaticurl>").append(staticUrl).append("</externalstaticurl>\n");
+            }
+            builder.append("\t</externalstaticurls>\n");
         }
 
         builder.append("</page>\n");

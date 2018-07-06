@@ -17,7 +17,7 @@ public class XMLSummaryGenerator implements SummaryGenerator {
     public void writeSummaryToFile() {
         try(
                 FileWriter fw = new FileWriter(filename);
-                BufferedWriter bw = new BufferedWriter(fw);
+                BufferedWriter bw = new BufferedWriter(fw)
         ) {
 
             for(ProcessedPage page: processedPages) {

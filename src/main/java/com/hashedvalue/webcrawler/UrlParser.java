@@ -10,43 +10,54 @@ import java.io.IOException;
 
 class UrlParser {
     private Document htmlDocument;
-    private String startUrl;
+    private String startHost;
     private String url;
     private String user_agent;
     private boolean validateSSLCerts;
 
-    UrlParser(String startUrl, String url, String user_agent, boolean validateSSLCerts) {
-        this.startUrl = startUrl;
+    UrlParser(String startHost, String url, String user_agent, boolean validateSSLCerts) {
+        this.startHost = startHost;
         this.url = url;
         this.user_agent = user_agent;
         this.validateSSLCerts = validateSSLCerts;
     }
 
     private boolean getPage(String url, String user_agent) {
-        Connection conn;
+        Connection conn = null;
         try {
             conn = Jsoup.connect(url).userAgent(user_agent).validateTLSCertificates(validateSSLCerts);
             htmlDocument = conn.get();
         } catch (IOException e) {
-            return false;
+            System.err.println("Page for url " + url + "not fetched correctly: " + e.getMessage());
         }
 
-        return conn.response().statusCode() == 200 && conn.response().contentType().contains("text/html");
+        if (conn.response().statusCode() == 200) {
+            String documentContentType = conn.response().contentType();
+            System.out.println("Page for url " + url + "fetched correctly with ContentType: " + documentContentType);
+            return true;
+        } else {
+            System.err.println("Page for url " + url + "not fetched incorrectly with status code: " + conn.response().statusCode());
+            return false;
+        }
     }
 
     ProcessedPage processPage() {
-        ProcessedPage page = new ProcessedPage(startUrl, url);
+        ProcessedPage page = new ProcessedPage(startHost, url);
 
-        if(getPage(url, user_agent)) {
+        if (getPage(url, user_agent)) {
             Elements links = htmlDocument.select("a[href],link[href]");
             for (Element el : links) {
-                page.addUrl(el.absUrl("href"));
+                String link = el.absUrl("href");
+                page.addUrl(link);
             }
-            Elements other = htmlDocument.select("img[src],script[src]");
-            for (Element el : other) {
-                page.addUrl(el.absUrl("src"));
+
+            Elements otherLinks = htmlDocument.select("img[src],script[src]");
+            for (Element el : otherLinks) {
+                String otherLink = el.absUrl("src");
+                page.addUrl(otherLink);
             }
         }
+
         return page;
     }
 }

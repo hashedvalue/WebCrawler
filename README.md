@@ -1,10 +1,11 @@
 # Web Crawler
 
 ### Purpose
-Provided software crawls given starting http or https url and provides a summary of found links afterwards. Links are divided into 3 groups:
+Provided software crawls given starting http or https url and provides a summary of found links afterwards. Links are divided into 4 groups:
 - internal links: links which are in the same domain as starting link or in its subdomain
 - external links: links in other domains
-- static links: links to static content
+- internal static links: links to static content related to starting link
+- external static links: links to static content not related to starting link
 
 ### Build
 Provided software uses maven with assembly plugin for build. To create a fat 'all-in-one' jar similar to the one in docker/ subdirectory please run:
