@@ -32,3 +32,9 @@ Example docker run with proxy and disabled verification of SSL certificates (USE
 
 Example standalone jar run:
 ```mkdir -p /tmp/webcrawler; CWR_MAX_PROCESSED_PAGES="20" CWR_REPORT_FILENAME="/tmp/dilbert.com.xml" CWR_START_URL="http://dilbert.com" java -jar WebCrawler-1.0-SNAPSHOT-jar-with-dependencies.jar```: afterwards your report will be available in /tmp/webcrawler/dilbert.com.xml file
+
+### Current state and possible improvements
+Overall due to time restriction below functionalities were not implemented but would be beneficial:
+- multithreading support: would speed up crawler's execution due to possibility of assignement of fetches and processing for different pages to different threads
+- usage of HEAD requests to check ContentType: this would along current mechanism of extension checks foster assignement of urls to normal or static groups, at the moment only extensions are verified
+- evaluation of robots.txt: this would make the crawler behave more friendly against scanned pages
